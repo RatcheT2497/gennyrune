@@ -1,0 +1,29 @@
+{
+  "ExportResourceDirectory": "..\\res",
+  "ExportHeaderDirectory": "..\\src",
+  "ExportSourceDirectory": "..\\src",
+  "Assets": [
+    { "Name": "titlescreen_logo",     "Type": "Image",    "Path": ".\\titlescreen\\logo.png", "Compression": "None" },
+
+    { "Name": "main_party",           "Type": "Palette",  "Path": ".\\characters\\main_party_palette.png" },
+
+    { "Name": "ui_textbox_dark",      "Type": "Tileset",    "Path": ".\\ui\\textbox_dark_tileset.png",    "Compression": "None", "Optimization": "None"},
+    { "Name": "ui_textbox_light",     "Type": "Tileset",    "Path": ".\\ui\\textbox_light_tileset.png",   "Compression": "None", "Optimization": "None"},
+    { "Name": "ui",                   "Type": "Palette",    "Path": ".\\ui\\textbox_light_tileset.png"},
+    { 
+      "Name": "operator",
+      "Type": "Font",
+      "Tilesets": [ 
+        { "Path": ".\\ui\\fonts\\font_operator_top.png",    "Compression": "None"}, 
+        { "Path": ".\\ui\\fonts\\font_operator_bottom.png", "Compression": "None"} 
+      ]
+    },
+    { "Name": "kris",                 "Type": "Sprite",   "Path": ".\\characters\\kris.png", "Width": 4, "Height": 5, "Compression": "None", "Collision": "None", "Optimization": "Balanced" },
+    { "Name": "toriel",               "Type": "Sprite",   "Path": ".\\characters\\toriel.png", "Width": 4, "Height": 7, "Compression": "None", "Collision": "None", "Optimization": "Balanced" },
+    { "Name": "kr_bedsheets",         "Type": "Sprite",   "Path": ".\\maps\\torihouse\\krisroom\\bedsheets.png", "Width": 6, "Height": 5, "Compression": "None", "Collision": "None", "Optimization": "Balanced" },
+    { "Name": "kr_computerdesk",      "Type": "Sprite",   "Path": ".\\maps\\torihouse\\krisroom\\computerdesk.png", "Width": 6, "Height": 4, "Compression": "None", "Collision": "None", "Optimization": "Balanced" },
+    { "Name": "toriel_face",          "Type": "Face",     "Path": ".\\ui\\faces\\face_toriel_0.png", "Width": 6, "Height": 5, "Compression": "None", "Collision": "None", "Optimization": "Balanced" },
+
+    { "Name": "torihouse_actors",     "Type": "Palette",  "Path": ".\\maps\\torihouse\\actor_palette.png" }
+  ]
+}

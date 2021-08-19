@@ -1,0 +1,6 @@
+out/
+.vscode/
+res/*/
+
+!./res/build.py
+!./res/project.json

@@ -1,0 +1,1 @@
+%APPDATA%\GensKmod\gens.exe %~f1

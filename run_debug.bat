@@ -1,0 +1,1 @@
+%APPDATA%\RetroArch\retroarch_debug.exe -L %APPDATA%\RetroArch\cores\gpgx_debugger_x64.dll %1%
