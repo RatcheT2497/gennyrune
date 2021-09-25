@@ -7,7 +7,8 @@
 ///                 Also includes some content which I hope to refactor out later.
 /// CHANGELOG:      (23/09/21) Added this file header. -R#
 ///                 (25/09/21) Added basic entrance trigger/node data for torihouse_lobby, alongside defines for each of the levels.
-///                            Removed ActorAnimationFrame_t as it was an experiment. -R#
+///                            Removed ActorAnimationFrame_t as it was an experiment.
+///                            Tried fixing the cram dots appearing, with marginal success. -R#
 #include <genesis.h>
 #include "utils.h"
 #include <genesis.h>
@@ -216,6 +217,38 @@ void callback(char c, u16 modifier_keys)
     sprintf(buffer, "char: %c", c);
     KLog(buffer);
 }
+void LVL_VIntCallback(void)
+{
+    if (gfx_palette_dirty)
+    {
+        if (!gfx_palette_fade_time)
+        {
+            PAL_setColors(0, gfx_palette, 16*4, DMA);
+            gfx_palette_dirty = FALSE;
+        } else {
+            if (gfx_palette_dirty & 0b10000000)
+            {
+                KLog("fade step");
+                PAL_doFadeStep();
+                if (!PAL_isDoingFade())
+                    gfx_palette_dirty &= 0b01111111;
+            } else {
+                if (gfx_palette_dirty & GFX_PALETTE_FADEIN)
+                {
+                    KLog("timed fade in");
+                    PAL_initFade(0, 16*4 - 1, palette_black, gfx_palette, gfx_palette_fade_time);
+//                    PAL_fadeInAll(gfx_palette, gfx_palette_fade_time, TRUE);
+                    gfx_palette_dirty = 0b10000000;
+                } else {
+                    KLog("timed fade out");
+                    PAL_initFade(0, 16*4 - 1, gfx_palette, palette_black, gfx_palette_fade_time);
+//                    PAL_fadeOutAll(gfx_palette_fade_time, TRUE);
+                    gfx_palette_dirty = 0b10000000;
+                }
+            }
+        }
+    }
+}
 int main(void)
 {
     /// INFO: compiler requires -fms-extensions for the nested structures used in level.h
@@ -223,6 +256,7 @@ int main(void)
         VDP_setPlaneSize(64, 64, TRUE);
         VDP_setScreenWidth320();
         VDP_setScreenHeight224();
+        SYS_setVIntCallback(&LVL_VIntCallback);
         SPR_init();
         JOY_setEventHandler(&PAD_JoyCallback);
 //          SYS_setVIntCallback(&KBD_VIntCallback);
@@ -234,8 +268,8 @@ int main(void)
 
     //EDT_PreInit();
     LVL_Init(levels[1]);
-    VDP_waitVBlank(TRUE);
-    PAL_fadeInAll(gfx_palette, 16, FALSE);
+    //VDP_waitVBlank(TRUE);
+    //PAL_fadeInAll(gfx_palette, 16, FALSE);
     //EDT_Init();
     
     while (1)

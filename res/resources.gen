@@ -8,7 +8,8 @@
 # CHANGELOG:      (23/09/21) Added this file header. -R#
 #                 (24/09/21) Added collision data to torihouse_krisroom level.
 #                            Added preprocessing for easy map creation.  -R#
-#                 (25/09/21) Added inline collision data to torihouse_krisroom, torihouse_hallway & torihouse_lobby. -R#
+#                 (25/09/21) Added inline collision data to torihouse_krisroom, torihouse_hallway & torihouse_lobby.
+#                            Removed editor resources and added textbox images. -R#
 SPRITE spr_placeholder ".\sprites\placeholder.png" 4 6 NONE 0 NONE BALANCED 500000
 PALETTE pal_placeholder_spr ".\sprites\placeholder.png"
 
@@ -84,7 +85,10 @@ PALETTE pal_torihouse_bathroom ".\maps\torihouse_bathroom.png"
 MAP map_torihouse_bathroom ".\maps\torihouse_bathroom.png" tls_torihouse_bathroom
 
 # editor resources
-TILESET tls_editor_font ".\fonts\editor_font.png" NONE NONE
-SPRITE spr_crosshair ".\sprites\crosshair.png" 2 2 NONE 0 NONE BALANCED 500000
-SPRITE spr_selector_small ".\sprites\selector_small.png" 1 1 NONE 0 NONE BALANCED 500000
+#TILESET tls_editor_font ".\fonts\editor_font.png" NONE NONE
+#SPRITE spr_crosshair ".\sprites\crosshair.png" 2 2 NONE 0 NONE BALANCED 500000
+#SPRITE spr_selector_small ".\sprites\selector_small.png" 1 1 NONE 0 NONE BALANCED 500000
 
+# UI resources
+IMAGE img_textbox_lw ".\ui\textbox_light.png" NONE ALL
+IMAGE img_textbox_dw ".\ui\textbox_dark.png" NONE ALL

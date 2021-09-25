@@ -9,7 +9,8 @@
 ///                 (24/09/21) Added basic collision detection to player movement.
 ///                            Cut down on data copying by storing a pointer to the current level definition. -R#
 ///                 (25/09/21) Added room transition trigger code to the player movement.
-///                            Partially untied player position and direction from the level data. -R# (NOTE: should maybe think of untying it completely/making a separate struct for it...)
+///                            Partially untied player position and direction from the level data. (NOTE: should maybe think of untying it completely/making a separate struct for it...)
+///                            Began working on custom palette management for room transitions. -R#
 #include <genesis.h>
 #include <resources.h>
 #include "level.h"
@@ -103,16 +104,20 @@ static inline void _LVL_ExecuteTrigger(u16 x, u16 y)
                 u16 room = trigger->button;
                 u8 node_id = (u8)trigger->script;
                 Vect2D_f16 *node;
+                LevelDefinition_t *newlevel = levels[room];
 
                 // fade out 
-                VDP_waitVBlank(TRUE);
-                PAL_fadeOutAll(16, FALSE);
-
+                while(gfx_palette_dirty); // wait for enough vblanks
+                SYS_disableInts();
+                    gfx_palette_dirty = GFX_PALETTE_FADEOUT | TRUE;
+                    gfx_palette_fade_time = 16;
+                SYS_enableInts();
+                while(gfx_palette_dirty); // wait for enough vblanks
                 // initialize level and new player coordinates
-                LVL_Init(levels[room]);
-                node = lvl_current_definition->actor_nodes + node_id;
+                node = newlevel->actor_nodes + node_id;
                 lvl_player_x = node->x;
                 lvl_player_y = node->y;
+                LVL_Init(newlevel);
                 _LVL_FocusCamera();
             } else {
                 // script trigger
@@ -125,7 +130,7 @@ static inline void _LVL_ExecuteTrigger(u16 x, u16 y)
         }
     }
 }
-/// TODO: make this into its own module maybe? feels weird having it as a level function
+/// TODO: make this into its own module maybe? feels weird having it as level functions
 void LVL_PartyFollowQueueDequeue()
 {
     u8 i;
@@ -275,8 +280,7 @@ static inline void _LVL_UpdateCharacters(void)
 void LVL_Init(const LevelDefinition_t *definition)
 {
     u8 i;
-    // wait for vblank
-    VDP_waitVBlank(FALSE);
+    SYS_disableInts();
     // store definition pointer
     lvl_current_definition = definition;
 
@@ -293,7 +297,7 @@ void LVL_Init(const LevelDefinition_t *definition)
 
     // allocate background tileset graphics
     gfx_allocated_tile_index = TILE_USERINDEX;
-    GFX_LoadTileset(definition->background_tileset, DMA); // tileset
+    GFX_LoadTileset(definition->background_tileset, DMA_QUEUE); // tileset
     memcpy(gfx_palette, definition->background_palette->data, definition->background_palette->length); // palette
     
     /// TODO: compress map data    
@@ -345,9 +349,13 @@ void LVL_Init(const LevelDefinition_t *definition)
     scr_source_textbank = definition->text_bank;
 
     /// TODO: leave palette update to scripting engine
-    PAL_setColors(0, gfx_palette, 4*16, DMA_QUEUE);
+    //PAL_setColors(0, gfx_palette, 4*16, DMA_QUEUE);
+    gfx_palette_dirty = GFX_PALETTE_FADEIN | TRUE;
+    gfx_palette_fade_time = 16;
+    SYS_enableInts();
     /// TODO: figure out if this does anything because it sure as heck doesn't scroll
     MAP_scrollTo(lvl_current.map, 0, 0);
+    while(gfx_palette_dirty); // wait for enough vblanks to load palette
 }
 void LVL_Update(void)
 {
