@@ -27,6 +27,11 @@ u8 lvl_current_trigger = 0xFF;
 fix16 lvl_player_x = 0, lvl_player_y = 0;
 u8 lvl_player_direction = 0;
 
+static inline void _LVL_FocusCamera(void)
+{
+    lvl_current.cam_x = lvl_player_x - FIX16(PIXEL_SCREEN_WIDTH/2);
+    lvl_current.cam_y = lvl_player_y - FIX16(PIXEL_SCREEN_HEIGHT/2);
+}
 static inline bool _LVL_CharIsOnTile(CharacterRuntime_t *character, u8 tile, u16 *ox, u16 *oy)
 {
     s16 x1, y1, x2, y2, x, y;
@@ -143,11 +148,6 @@ void LVL_PartyFollowQueueEnqueue(fix16 x, fix16 y, u8 dir)
     lvl_current.character_follow_queue_y[lvl_current.character_follow_queue_rear] = y;
     lvl_current.character_follow_queue_dir[lvl_current.character_follow_queue_rear] = dir;
     lvl_current.character_follow_queue_rear++;
-}
-static inline void _LVL_FocusCamera(void)
-{
-    lvl_current.cam_x = lvl_player_x - FIX16(PIXEL_SCREEN_WIDTH/2);
-    lvl_current.cam_y = lvl_player_y - FIX16(PIXEL_SCREEN_HEIGHT/2);
 }
 static inline void _LVL_UpdatePlayer(void)
 {
