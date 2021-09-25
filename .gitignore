@@ -1,6 +1,6 @@
 out/
 .vscode/
-res/*/
-
-!./res/build.py
-!./res/project.json
+res/
+src/keyboard.c
+src/keyboard.h
+!./res/resources.gen

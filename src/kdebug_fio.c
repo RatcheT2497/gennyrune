@@ -1,3 +1,10 @@
+/// PROJECT:        Deltarune MD
+/// FILE:           src/kdebug_fio.c
+/// AUTHOR:         RatcheT2497
+/// CREATION:       ???
+/// MODIFIED:       23/09/21
+/// DESCRIPTION:    File containing definitions for the kdebug file i/o module's API.
+/// CHANGELOG:      (23/09/21) Added this file header. -R#
 #include "kdebug_fio.h"
 enum {
     FIO_CTL_SELECT = 0x9D80,

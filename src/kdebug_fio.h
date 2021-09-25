@@ -1,3 +1,10 @@
+/// PROJECT:        Deltarune MD
+/// FILE:           src/kdebug_fio.h
+/// AUTHOR:         RatcheT2497
+/// CREATION:       ???
+/// MODIFIED:       23/09/21
+/// DESCRIPTION:    File containing declarations for the kdebug file i/o module. Protocol is entirely custom, and will only work in a modified emulator.
+/// CHANGELOG:      (23/09/21) Added this file header. -R#
 #ifndef _KDEBUG_FIO_H_
 #define _KDEBUG_FIO_H_
 #include <genesis.h>
