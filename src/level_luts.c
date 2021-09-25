@@ -6,6 +6,7 @@
 /// DESCRIPTION:    File containing definitions for a few entity & character specific LUTs.
 /// CHANGELOG:      (23/09/21) Added this file header. -R#
 ///                 (24/09/21) Added character collision offset & size data. -R#
+///                 (25/09/21) Made Kris' hitbox smaller. -R&
 #include <genesis.h>
 #include "level.h"
 #include "resources.h"
@@ -21,13 +22,13 @@ const SpriteDefinition const* lvl_character_sprites_lw[4] = {
     NULL
 };
 const Vect2D_s16 lvl_character_bounds_lw[] = {
-    { .x = 16, .y = 16 },
+    { .x = 14, .y = 14 },
     { .x = 0, .y = 0 },
     { .x = 0, .y = 0 },
     { .x = 0, .y = 0 }
 };
 const Vect2D_s16 lvl_character_offsets_lw[] = {
-    { .x = 8, .y = 24 },
+    { .x = 10, .y = 26 },
     { .x = 0, .y = 0 },
     { .x = 0, .y = 0 },
     { .x = 0, .y = 0 }

@@ -8,6 +8,8 @@
 ///                 (24/09/21) Added declaration for character collision offset/size. -R#
 ///                            Inlined the visual/logical structs into the actual level definition -R#
 ///                            Added level tile legend -R#
+///                 (25/09/21) Replaced custom LevelActorNode_t struct with simple Vect2D_f16. -R#
+
 #ifndef _LEVEL_H_
 #define _LEVEL_H_
 #include <genesis.h>
@@ -86,11 +88,6 @@ typedef struct {
     u8  width, height;
 } LevelTrigger_t;
 typedef struct {
-    fix16 x;
-    fix16 y;
-} LevelActorNode_t;
-
-typedef struct {
     u16                 flags;
 
     // logic data
@@ -107,7 +104,7 @@ typedef struct {
     /// TODO: make use of this byte
     u8                  padding; 
 
-    LevelActorNode_t*   actor_nodes;
+    Vect2D_f16*   actor_nodes;
     EntityDefinition_t* entities;
     LevelTrigger_t*     triggers;
 
@@ -147,6 +144,9 @@ extern const SpriteDefinition const* lvl_character_sprites_lw[];
 extern LevelRuntime_t lvl_current;
 extern LevelDefinition_t *lvl_current_definition;
 extern u8 lvl_current_party;
+
+extern fix16 lvl_player_x, lvl_player_y;
+extern u8 lvl_player_direction;
 
 void LVL_Init(const LevelDefinition_t *definition);
 void LVL_Update(void);

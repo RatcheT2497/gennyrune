@@ -6,9 +6,9 @@
 /// DESCRIPTION:    File containing definitions for the level module and its API. 
 ///                 Also includes some internal things such as player movement, but I hope to refactor that out later.
 /// CHANGELOG:      (23/09/21) Added this file header. -R#
-///                 (24/09/21) Added basic collision detection to player movement. -R#
+///                 (24/09/21) Added basic collision detection to player movement.
 ///                            Cut down on data copying by storing a pointer to the current level definition. -R#
-///                 (25/09/21) Added room transition trigger code to the player movement. -R#
+///                 (25/09/21) Added room transition trigger code to the player movement.
 ///                            Partially untied player position and direction from the level data. -R# (NOTE: should maybe think of untying it completely/making a separate struct for it...)
 #include <genesis.h>
 #include <resources.h>
@@ -51,7 +51,6 @@ static inline bool _LVL_CharIsOnTile(CharacterRuntime_t *character, u8 tile, u16
         for (x = x1; x <= x2; x++)
         {
             u8 _tile = ((lvl_current_definition->collision_map[(x/2) + y * lvl_current_definition->width/32] >> (( 1 ^ (x & 1)) * 4)) & 0xF);
-            //KLog_U3("TILEFUNC x ", x1, " y ", y1, " t ", _tile);
             if (_tile == tile)
             {
                 *ox = x;
@@ -103,7 +102,7 @@ static inline void _LVL_ExecuteTrigger(u16 x, u16 y)
                 // teleport trigger
                 u16 room = trigger->button;
                 u8 node_id = (u8)trigger->script;
-                LevelActorNode_t *node;
+                Vect2D_f16 *node;
 
                 // fade out 
                 VDP_waitVBlank(TRUE);

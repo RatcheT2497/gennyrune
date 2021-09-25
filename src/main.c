@@ -2,11 +2,12 @@
 /// FILE:           src/main.c
 /// AUTHOR:         RatcheT2497
 /// CREATION:       ???
-/// MODIFIED:       23/09/21
+/// MODIFIED:       25/09/21
 /// DESCRIPTION:    Main project file. Contains the entry point for the program, initialization and main game loop.
 ///                 Also includes some content which I hope to refactor out later.
 /// CHANGELOG:      (23/09/21) Added this file header. -R#
-
+///                 (25/09/21) Added basic entrance trigger/node data for torihouse_lobby, alongside defines for each of the levels.
+///                            Removed ActorAnimationFrame_t as it was an experiment. -R#
 #include <genesis.h>
 #include "utils.h"
 #include <genesis.h>
@@ -18,11 +19,12 @@
 #include "pad.h"
 //#include "keyboard.h"
 #include "editor.h"
-typedef struct {
-    u8 flags;
-    u8 frames;
-    u16 node;
-} ActorAnimationFrame_t;
+#define LEVEL_TESTROOM (0)
+#define LEVEL_TORIHOUSE_KRISROOM (1)
+#define LEVEL_TORIHOUSE_HALLWAY (2)
+#define LEVEL_TORIHOUSE_LOBBY (3)
+#define LEVEL_TORIHOUSE_BATHROOM (4)
+
 /// TODO: refactor content out into its own file
 const EntityDefinition_t test_level_entities[] = {
     { 
@@ -64,12 +66,12 @@ const LevelTrigger_t triggers_torihouse_krisroom[] = {
         .width = 2,
         .height = 2,
         
-        .button = 2, // room
+        .button = LEVEL_TORIHOUSE_HALLWAY, // room
         .script = 0  // node
     }
 };
-const LevelActorNode_t nodes_torihouse_krisroom[] = {
-    { .x = FIX16(160), .y = FIX16(112) }
+const Vect2D_f16 nodes_torihouse_krisroom[] = {
+    { .x = FIX16(150), .y = FIX16(132) }
 };
 const LevelDefinition_t level_torihouse_krisroom = {
     .flags = CHAR_KRIS,
@@ -95,8 +97,9 @@ const LevelDefinition_t level_torihouse_krisroom = {
     .entity_count = 0,
     .entities = NULL
 };
-const LevelActorNode_t nodes_torihouse_hallway[] = {
-    { .x = FIX16(280), .y = FIX16(128) }
+const Vect2D_f16 nodes_torihouse_hallway[] = {
+    { .x = FIX16(280), .y = FIX16(128) },
+    { .x = FIX16(424), .y = FIX16(128) }
 };
 
 const LevelTrigger_t triggers_torihouse_hallway[] = {
@@ -107,8 +110,18 @@ const LevelTrigger_t triggers_torihouse_hallway[] = {
         .width = 3,
         .height = 2,
         
-        .button = 1, // room
+        .button = LEVEL_TORIHOUSE_KRISROOM, // room
         .script = 0  // node
+    },
+    {
+        .flags = 0x8000,
+        .x = 26,
+        .y = 6,
+        .width = 2,
+        .height = 2,
+        
+        .button = LEVEL_TORIHOUSE_LOBBY,
+        .script = 0
     }
 };
 const LevelDefinition_t level_torihouse_hallway = {
@@ -126,16 +139,33 @@ const LevelDefinition_t level_torihouse_hallway = {
     .cutscene_bank = NULL,
     .text_bank = NULL,
 
-    .actor_node_count = 1,
+    .actor_node_count = 2,
     .actor_nodes = nodes_torihouse_hallway,
 
-    .trigger_count = 1,
+    .trigger_count = 2,
     .triggers = triggers_torihouse_hallway,
 
     .entity_count = 0,
     .entities = NULL
 };
+const Vect2D_f16 nodes_torihouse_lobby[] = {
+    { .x = FIX16(70), .y = FIX16(144) }
+};
+const LevelTrigger_t triggers_torihouse_lobby[] = {
+    {
+        .flags = 0x8000,
+        .x = 4,
+        .y = 8,
+        .width = 2,
+        .height = 2,
+        
+        .button = LEVEL_TORIHOUSE_HALLWAY, // room
+        .script = 1  // node
+    },
+};
 const LevelDefinition_t level_torihouse_lobby = {
+    .flags = CHAR_KRIS,
+
     .actor_palette = &pal_placeholder_spr,
     .background_map = &map_torihouse_lobby,
     .background_tileset = &tls_torihouse_lobby,
@@ -144,11 +174,18 @@ const LevelDefinition_t level_torihouse_lobby = {
     .cutscene_bank = NULL,
     .text_bank = NULL,
 
-    .trigger_count = 0,
-    .triggers = NULL,
+    .trigger_count = 1,
+    .triggers = triggers_torihouse_lobby,
 
     .entity_count = 0,
-    .entities = NULL
+    .entities = NULL,
+    
+    .actor_node_count = 1,
+    .actor_nodes = nodes_torihouse_lobby,
+
+    .width = 544,
+    .height = 224,
+    .collision_map = col_torihouse_lobby
 };
 const LevelDefinition_t level_torihouse_bathroom = {
     .actor_palette = &pal_placeholder_spr,
