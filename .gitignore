@@ -1,6 +1,6 @@
 out/
 .vscode/
-res/
 src/keyboard.c
 src/keyboard.h
-!./res/resources.gen
+res/*
+!res/resources.gen
