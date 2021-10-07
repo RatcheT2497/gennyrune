@@ -46,7 +46,7 @@ const EntityDefinition_t test_level_entities[] = {
 const LevelDefinition_t test_level = {
     .actor_palette = &pal_placeholder_spr,
 
-    .background_map = &map_placeholder,
+    .background_map = &map_placeholder_map,
     .background_tileset = &tls_placeholder_map,
     .background_palette = &pal_placeholder_map,
 
@@ -72,6 +72,7 @@ const LevelTrigger_t triggers_torihouse_krisroom[] = {
     }
 };
 const Vect2D_f16 nodes_torihouse_krisroom[] = {
+    { .x = FIX16(160), .y = FIX16(112) },
     { .x = FIX16(150), .y = FIX16(132) }
 };
 const LevelDefinition_t level_torihouse_krisroom = {

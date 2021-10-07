@@ -87,9 +87,9 @@ class LevelGenerator(Generator):
     def finalize(self):
         return [
             f'# LEVEL: {self.name}\n',
-            f'TILESET tls_{self.name} NONE ALL\n',
+            f'TILESET tls_{self.name} \"{self.path}\" NONE ALL\n',
             f'PALETTE pal_{self.name} \"{self.path}\"\n',
-            f'MAP map_{self.name} tls_{self.name}\n',
+            f'MAP map_{self.name} \"{self.path}\" tls_{self.name}\n',
         ]
 
     def add_line_data(self, line, tokens):
