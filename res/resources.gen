@@ -2,7 +2,7 @@
 # FILE:           res/resources.res
 # AUTHOR:         RatcheT2497
 # CREATION:       ???
-# MODIFIED:       25/09/21
+# MODIFIED:       06/10/21
 # DESCRIPTION:    Resource file for the project, to be preprocessed with the ../tools/resgen.py script and then compiled with SGDK's rescomp.
 #                 Not sure how to handle asset distribution, so the GitHub won't have anything other than this file just yet.
 # CHANGELOG:      (23/09/21) Added this file header. -R#
@@ -10,6 +10,7 @@
 #                            Added preprocessing for easy map creation.  -R#
 #                 (25/09/21) Added inline collision data to torihouse_krisroom, torihouse_hallway & torihouse_lobby.
 #                            Removed editor resources and added textbox images. -R#
+#                 (06/10/21) Replaced manual level asset definitions with preprocessor level definitions -R#
 SPRITE spr_placeholder ".\sprites\placeholder.png" 4 6 NONE 0 NONE BALANCED 500000
 PALETTE pal_placeholder_spr ".\sprites\placeholder.png"
 
@@ -17,14 +18,11 @@ SPRITE spr_kris ".\characters\kris.png" 4 5 NONE 0 NONE BALANCED 500000
 PALETTE pal_main_party ".\characters\main_party_palette.png"
 
 # level resources
-TILESET tls_placeholder_map ".\maps\placeholder.png"
-PALETTE pal_placeholder_map ".\maps\placeholder.png"
-MAP map_placeholder ".\maps\placeholder.png" tls_placeholder_map
+
+#!LEVEL placeholder_map ".\maps\placeholder.png"
 BIN cut_test ".\maps\cutscene.bin" NONE
 
-TILESET tls_torihouse_krisroom ".\maps\torihouse_krisroom.png" NONE ALL
-PALETTE pal_torihouse_krisroom ".\maps\torihouse_krisroom.png"
-MAP map_torihouse_krisroom ".\maps\torihouse_krisroom.png" tls_torihouse_krisroom
+#!LEVEL torihouse_krisroom ".\maps\torihouse_krisroom.png"
 #!COLMAP col_torihouse_krisroom "maps\torihouse_krisroom.col" 20 14
 #@ ....................
 #@ ....................
@@ -40,11 +38,9 @@ MAP map_torihouse_krisroom ".\maps\torihouse_krisroom.png" tls_torihouse_krisroo
 #@ .####.............#.
 #@ .########~~########.
 #@ ........#~~#........
-#!ENDCOL
+#!END
 
-TILESET tls_torihouse_hallway ".\maps\torihouse_hallway.png" NONE ALL
-PALETTE pal_torihouse_hallway ".\maps\torihouse_hallway.png"
-MAP map_torihouse_hallway ".\maps\torihouse_hallway.png" tls_torihouse_hallway
+#!LEVEL torihouse_hallway ".\maps\torihouse_hallway.png"
 #!COLMAP col_torihouse_hallway "maps\torihouse_hallway.col" 32 14
 #@ ................................
 #@ ................................
@@ -60,10 +56,9 @@ MAP map_torihouse_hallway ".\maps\torihouse_hallway.png" tls_torihouse_hallway
 #@ ..############################..
 #@ ................................
 #@ ................................
-#!ENDCOL
-TILESET tls_torihouse_lobby ".\maps\torihouse_lobby.png" NONE ALL
-PALETTE pal_torihouse_lobby ".\maps\torihouse_lobby.png"
-MAP map_torihouse_lobby ".\maps\torihouse_lobby.png" tls_torihouse_lobby
+#!END
+
+#!LEVEL torihouse_lobby ".\maps\torihouse_lobby.png"
 #!COLMAP col_torihouse_lobby "maps\torihouse_lobby.col" 34 14
 #@ ..................................
 #@ ..................................
@@ -79,10 +74,9 @@ MAP map_torihouse_lobby ".\maps\torihouse_lobby.png" tls_torihouse_lobby
 #@ ~.......##########....#########..~
 #@ ##################################
 #@ ##################################
-#!ENDCOL
-TILESET tls_torihouse_bathroom ".\maps\torihouse_bathroom.png" NONE ALL
-PALETTE pal_torihouse_bathroom ".\maps\torihouse_bathroom.png"
-MAP map_torihouse_bathroom ".\maps\torihouse_bathroom.png" tls_torihouse_bathroom
+#!END
+
+#!LEVEL torihouse_bathroom ".\maps\torihouse_bathroom.png"
 
 # editor resources
 #TILESET tls_editor_font ".\fonts\editor_font.png" NONE NONE
