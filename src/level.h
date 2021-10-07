@@ -49,13 +49,14 @@ enum {
 typedef struct { 
     u8      index;
     u8      type;
-    u16     flags;
+    u8      flags;
+    u8      padding;
     fix16   x;
     fix16   y;
 } EntityDefinition_t;
 
 typedef struct { u8 width; u8 height; } EntitySize_t;
-
+/*
 typedef struct BaseEntityRuntime {
     u16     flags;
     fix16   x;
@@ -77,7 +78,7 @@ typedef struct {
     struct BaseEntityRuntime;
     u8 direction;
 } CharacterRuntime_t;
-
+*/
 /// TODO: implement these structs. should be much cleaner
 typedef struct {
     u8 type;
@@ -94,10 +95,10 @@ typedef struct {
     u8 mvt_speed;
 
     Sprite *sprite;
-} UnifiedActorRuntimeData_t; // 16 bytes
+} ActorRuntimeData_t; // 16 bytes
 typedef struct {
     u8 actor_id;
-} ExtraCharacterRuntimeData_t;
+} CharacterRuntimeData_t;
 
 // Logic portion of a level definition 
 typedef struct {
@@ -143,22 +144,23 @@ typedef struct {
     Palette*            actor_palette;
 
 } LevelDefinition_t; // 52
+
 typedef struct {
     /// TODO: dynamic actor count + unified actor system
     // character data
-    CharacterRuntime_t  characters[CHARACTER_COUNT];
-    CharacterRuntime_t* character_lead;
-    s8                  character_follow_queue_rear;
-    fix16               character_follow_queue_x[PARTY_MAX_FOLLOW_QUEUE];
-    fix16               character_follow_queue_y[PARTY_MAX_FOLLOW_QUEUE];
-    u8                  character_follow_queue_dir[PARTY_MAX_FOLLOW_QUEUE];
+    CharacterRuntimeData_t      characters[CHARACTER_COUNT];
+    s8                          character_follow_queue_rear;
+    fix16                       character_follow_queue_x[PARTY_MAX_FOLLOW_QUEUE];
+    fix16                       character_follow_queue_y[PARTY_MAX_FOLLOW_QUEUE];
+    u8                          character_follow_queue_dir[PARTY_MAX_FOLLOW_QUEUE];
 
     /// TODO: add back room decor, possibly only as SGDK Sprites
-    ActorRuntime_t      actors[ACTOR_COUNT];
-
-    Map*            map;
-    fix16           cam_x; 
-    fix16           cam_y;
+    ActorRuntimeData_t         *actors;//[ACTOR_COUNT];
+    ActorRuntimeData_t         *lead_character_actor;
+    
+    Map*                        map;
+    fix16                       cam_x; 
+    fix16                       cam_y;
 } LevelRuntime_t; // 720
 
 /// TODO: do i even need this public

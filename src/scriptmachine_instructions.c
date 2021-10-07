@@ -35,13 +35,13 @@ I(ActorSetMvtVec)
 {
     u8 x = IBYTE;
     u8 y = IBYTE;
-    lvl_current.actors[scr_current_actor].mvt_dx = FIX16(x);
-    lvl_current.actors[scr_current_actor].mvt_dy = FIX16(y);
+//    lvl_current.actors[scr_current_actor].mvt_dx = FIX16(x);
+//    lvl_current.actors[scr_current_actor].mvt_dy = FIX16(y);
 }
 I(ActorSetMvtFrames)
 {
     u8 f = IBYTE;
-    lvl_current.actors[scr_current_actor].mvt_timer = f;
+//    lvl_current.actors[scr_current_actor].mvt_timer = f;
 }
 I(ActorSetAnim)
 {
@@ -74,7 +74,7 @@ I(ActorGroupShow)
     {
         if (bitmask_copy & 1)
         {
-            ActorRuntime_t *actor = lvl_current.actors + actor_id;
+            ActorRuntimeData_t *actor = lvl_current.actors + actor_id;
             if ((s16)actor->flags < 0)
             {
                 if (actor->sprite)
@@ -97,7 +97,7 @@ I(ActorGroupHide)
     {
         if (bitmask_copy & 1)
         {
-            ActorRuntime_t *actor = lvl_current.actors + actor_id;
+            ActorRuntimeData_t *actor = lvl_current.actors + actor_id;
             if ((s16)actor->flags < 0)
             {
                 if (actor->sprite)

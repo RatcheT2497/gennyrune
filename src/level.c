@@ -33,7 +33,7 @@ static inline void _LVL_FocusCamera(void)
     lvl_current.cam_x = lvl_player_x - FIX16(PIXEL_SCREEN_WIDTH/2);
     lvl_current.cam_y = lvl_player_y - FIX16(PIXEL_SCREEN_HEIGHT/2);
 }
-static inline bool _LVL_CharIsOnTile(CharacterRuntime_t *character, u8 tile, u16 *ox, u16 *oy)
+static inline bool _LVL_CharIsOnTile(ActorRuntimeData_t *character, u8 tile, u16 *ox, u16 *oy)
 {
     s16 x1, y1, x2, y2, x, y;
     Vect2D_s16 offset = lvl_character_offsets_lw[character->type];
@@ -62,7 +62,7 @@ static inline bool _LVL_CharIsOnTile(CharacterRuntime_t *character, u8 tile, u16
     }
     return FALSE;
 }
-static inline bool _LVL_CharCanPass(CharacterRuntime_t *character, fix16 dx, fix16 dy)
+static inline bool _LVL_CharCanPass(ActorRuntimeData_t *character, fix16 dx, fix16 dy)
 {
     s16 x1, y1, x2, y2, x, y;
     Vect2D_s16 offset = lvl_character_offsets_lw[character->type];
@@ -160,7 +160,7 @@ static inline void _LVL_UpdatePlayer(void)
     bool running = FALSE;
     fix16 dx = 0, dy = 0;
     u16 tx, ty;
-    u8 lead_dir = lvl_current.character_lead->direction;
+    u8 lead_dir = lvl_current.lead_character_actor->direction;
 
     /// TODO: slow buildup to running speed
     if (PAD_BTN_HELD(JOY_1, BUTTON_B))
@@ -196,9 +196,9 @@ static inline void _LVL_UpdatePlayer(void)
     /// TODO: add support for slopes
     // basic collision detection
     bool noclip = PAD_BTN_HELD(JOY_1, BUTTON_C);
-    if (!noclip && !_LVL_CharCanPass(lvl_current.character_lead, dx, 0))
+    if (!noclip && !_LVL_CharCanPass(lvl_current.lead_character_actor, dx, 0))
         dx = 0;
-    if (!noclip && !_LVL_CharCanPass(lvl_current.character_lead, 0, dy))
+    if (!noclip && !_LVL_CharCanPass(lvl_current.lead_character_actor, 0, dy))
         dy = 0;
 
     // character movement
@@ -206,10 +206,10 @@ static inline void _LVL_UpdatePlayer(void)
     lvl_player_y += dy;
 
     // position and direction stored as copies so they can be modified/kept as is before level deletion
-    lvl_current.character_lead->x = lvl_player_x;
-    lvl_current.character_lead->y = lvl_player_y;
+    lvl_current.lead_character_actor->x = lvl_player_x;
+    lvl_current.lead_character_actor->y = lvl_player_y;
 
-    if (_LVL_CharIsOnTile(lvl_current.character_lead, 0xF, &tx, &ty))
+    if (_LVL_CharIsOnTile(lvl_current.lead_character_actor, 0xF, &tx, &ty))
     {
         // is inside trigger
         _LVL_ExecuteTrigger(tx, ty);
@@ -231,28 +231,28 @@ static inline void _LVL_UpdatePlayer(void)
 
     // animate
     lvl_player_direction = lead_dir;
-    lvl_current.character_lead->direction = lvl_player_direction;
+    lvl_current.lead_character_actor->direction = lvl_player_direction;
     if (dx == 0 && dy == 0)
     {
         // still
-        lvl_current.character_lead->animation = lead_dir;
-        lvl_current.character_lead->frame_timer = 0;
-        lvl_current.character_lead->frame = 0;
+        lvl_current.lead_character_actor->animation = lead_dir;
+        lvl_current.lead_character_actor->frame_timer = 0;
+        lvl_current.lead_character_actor->frame = 0;
     } else {
         // walking
-        lvl_current.character_lead->animation = lead_dir + 4;
-        lvl_current.character_lead->frame_timer++;
+        lvl_current.lead_character_actor->animation = lead_dir + 4;
+        lvl_current.lead_character_actor->frame_timer++;
         if (running)
-            lvl_current.character_lead->frame_timer++;
-        if (lvl_current.character_lead->frame_timer >= 12)
+            lvl_current.lead_character_actor->frame_timer++;
+        if (lvl_current.lead_character_actor->frame_timer >= 12)
         {
-            lvl_current.character_lead->frame = (lvl_current.character_lead->frame + 1) & 3;
-            lvl_current.character_lead->frame_timer = 0;
+            lvl_current.lead_character_actor->frame = (lvl_current.lead_character_actor->frame + 1) & 3;
+            lvl_current.lead_character_actor->frame_timer = 0;
         }
     }
 }
 
-static inline void _LVL_UpdateEntity(BaseEntityRuntime_t *entity)
+static inline void _LVL_UpdateActor(ActorRuntimeData_t *entity)
 {
     if (entity->sprite) 
     {
@@ -267,14 +267,7 @@ static inline void _LVL_UpdateEntity(BaseEntityRuntime_t *entity)
 }
 static inline void _LVL_UpdateCharacters(void)
 {
-    for (u8 i = 0; i < 4; i++)
-    {
-        if (lvl_current_party & (1 << i))
-        {
-            CharacterRuntime_t *character = lvl_current.characters + i;
-            _LVL_UpdateEntity((BaseEntityRuntime_t*) character);
-        }
-    }
+    /// TODO: WIP
 }
 
 void LVL_Init(const LevelDefinition_t *definition)
@@ -305,18 +298,31 @@ void LVL_Init(const LevelDefinition_t *definition)
     lvl_current.map = MAP_create(definition->background_map, BG_B, TILE_ATTR_FULL(PAL_WORLD, FALSE, FALSE, FALSE, TILE_USERINDEX));
     
     /// TODO: compress collision data
-    
+    // set player position
+    if (definition->actor_node_count)
+    {
+        lvl_player_x = definition->actor_nodes[0].x;
+        lvl_player_y = definition->actor_nodes[0].y;
+    } else {
+        lvl_player_x = 0;
+        lvl_player_y = 0;
+    }
     // initialize entities 
+    if (lvl_current.actors) MEM_free(lvl_current.actors);
+    u16 actor_size = sizeof(ActorRuntimeData_t) * (definition->entity_count + 4);
+    lvl_current.actors = MEM_alloc(actor_size);
+    memset(lvl_current.actors, 0, actor_size);
+
     memcpy(gfx_palette + 16, definition->actor_palette->data, definition->actor_palette->length); // entity palette
     for (i = 0; i < definition->entity_count; i++)
     {
         EntityDefinition_t *def = definition->entities + i;
         if (def->type == ENT_ACTOR)
         {
-            ActorRuntime_t *actor = lvl_current.actors + def->index;
+            ActorRuntimeData_t *actor = lvl_current.actors + def->index + 4;
             actor->x = def->x;
             actor->y = def->y;
-            actor->flags = 0x8000 | def->flags;
+            actor->flags = 0x80 | def->flags;
             actor->type = def->type;
             if (lvl_entity_sprite_definitions[actor->type])
             {
@@ -327,20 +333,21 @@ void LVL_Init(const LevelDefinition_t *definition)
     }
     // load characters & set leading character
     memcpy(gfx_palette + 32, pal_main_party.data, pal_main_party.length);
-    lvl_current.character_lead = lvl_current.characters;
+    lvl_current.lead_character_actor = lvl_current.actors;
     for (i = 0; i < 4; i++)
     {
         if ( ((lvl_current_party & (1 << i)) == (definition->flags & (1 << i))) && 
              ((lvl_current_party & (1 << i)) != 0) )
         {
-            CharacterRuntime_t temp = {0};
-            temp.type = i;
-            temp.x = lvl_player_x;
-            temp.y = lvl_player_y;
-            temp.direction = lvl_player_direction;
-            temp.sprite = SPR_addSprite(lvl_character_sprites_lw[i], fix16ToInt(temp.x), fix16ToInt(temp.y), TILE_ATTR(PAL_CHARACTERS, FALSE, FALSE, FALSE));
-            SPR_setVisibility(temp.sprite, AUTO_FAST);
-            lvl_current.characters[i] = temp;
+            ActorRuntimeData_t *actor = lvl_current.actors + i;
+            lvl_current.characters[i].actor_id = i;
+            actor->flags = 0x80;
+            actor->type = i;
+            actor->x = lvl_player_x;
+            actor->y = lvl_player_y;
+            actor->direction = lvl_player_direction;
+            actor->sprite = SPR_addSprite(lvl_character_sprites_lw[i], fix16ToInt(actor->x), fix16ToInt(actor->y), TILE_ATTR(PAL_CHARACTERS, FALSE, FALSE, FALSE));
+            SPR_setVisibility(actor->sprite, AUTO_FAST);
         }
     }
 
@@ -371,18 +378,20 @@ void LVL_Update(void)
     _LVL_UpdateCharacters();
 
     // update actors
-    for (i = 0; i < ACTOR_COUNT; i++)
+    KLog_U1("bruh ", lvl_current_definition->entity_count + 4);
+    for (i = 0; i < lvl_current_definition->entity_count + 4; i++)
     {
-        ActorRuntime_t *actor = lvl_current.actors + i;
-        if (((s16)actor->flags) < 0)
+        ActorRuntimeData_t *actor = lvl_current.actors + i;
+        KLog_U1("update actor ", actor->flags);
+        if (((s8)actor->flags) < 0)
         {
-            if (actor->mvt_timer != 0)
+            /*if (actor->mvt_timer != 0)
             {
                 actor->x += actor->mvt_dx;
                 actor->y += actor->mvt_dy;
                 actor->mvt_timer--;
-            }
-            _LVL_UpdateEntity((BaseEntityRuntime_t*) actor);
+            }*/
+            _LVL_UpdateActor(actor);
         }
     }
 

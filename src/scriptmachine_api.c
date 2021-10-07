@@ -69,13 +69,14 @@ void SCR_Tick(void)
             /// TODO: add actor animation code
             if (bitmask_copy & 1)
             {
-                ActorRuntime_t *actor = lvl_current.actors + actor_id;
+                ActorRuntimeData_t *actor = lvl_current.actors + actor_id;
                 // movement takes precedence
-                if (scr_flags & SCRF_WAIT_ACTOR_MOVEMENT)
-                {
-                    if (actor->mvt_timer != 0)
-                        return;
-                }
+                /// TODO: add moving flag to actor
+                //if (scr_flags & SCRF_WAIT_ACTOR_MOVEMENT)
+                //{
+                //    if (actor->mvt_timer != 0)
+                //        return;
+                //}
                 if (scr_flags & SCRF_WAIT_ACTOR_ANIMATION)
                 {
                     SYS_die("unimplemented actor animation system");
