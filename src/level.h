@@ -78,14 +78,41 @@ typedef struct {
     u8 direction;
 } CharacterRuntime_t;
 
+/// TODO: implement these structs. should be much cleaner
+typedef struct {
+    u8 type;
+    u8 flags;
+    fix16 x;
+    fix16 y;
+    u8 direction;
+    u8 animation;
+    u8 frame;
+    s8 frame_timer; // if positive, counts down. else next frame. if negative, then frozen
+
+    // for scripting system
+    s8 mvt_node; // vvvvvvtt - type 0: level node; type 1: level mvt. sequence; type 2: ???; type 3: none;
+    u8 mvt_speed;
+
+    Sprite *sprite;
+} UnifiedActorRuntimeData_t; // 16 bytes
+typedef struct {
+    u8 actor_id;
+} ExtraCharacterRuntimeData_t;
+
 // Logic portion of a level definition 
 typedef struct {
     u16 flags;
+
+    /// TODO: rename to `target`
     u16 script;
+    
+    /// TODO: rename to `specifier` or some such
     u16 button;
+    
     u16 x;
     u16 y;
-    u8  width, height;
+    u8  width; 
+    u8  height;
 } LevelTrigger_t;
 typedef struct {
     u16                 flags;
@@ -104,7 +131,7 @@ typedef struct {
     /// TODO: make use of this byte
     u8                  padding; 
 
-    Vect2D_f16*   actor_nodes;
+    Vect2D_f16*         actor_nodes;
     EntityDefinition_t* entities;
     LevelTrigger_t*     triggers;
 
@@ -117,6 +144,7 @@ typedef struct {
 
 } LevelDefinition_t; // 52
 typedef struct {
+    /// TODO: dynamic actor count + unified actor system
     // character data
     CharacterRuntime_t  characters[CHARACTER_COUNT];
     CharacterRuntime_t* character_lead;
