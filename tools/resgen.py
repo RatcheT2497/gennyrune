@@ -45,19 +45,19 @@ class CollisionMapGenerator(Generator):
         self.width = int(tokens[3], 0)
         self.height = int(tokens[4], 0)
         if (self.width % 2) != 0:
-            raise Exception(f'CollisionMapGenerator: invalid map width ({self.width}): not a power of 2')
+            raise Exception(f'CollisionMapGenerator init: invalid map width ({self.width}): not a power of 2')
         self.array = []
 
     def add_line_data(self, line, tokens):
         # not using the passed tokens and instead just splitting the line on spaces
         split_line = line.strip().split(' ')
         if len(split_line) != 2:
-            raise Exception(f'CollisionMapGenerator: invalid number of data arguments ({len(split_line)} instead of 2)')
+            raise Exception(f'CollisionMapGenerator add_line_data: invalid number of data arguments ({len(split_line)} instead of 2)')
         
         # index 0 should be the data definition symbol, 1 should be the data
         data_line = split_line[1]
         if len(data_line) != self.width:
-            raise Exception(f'CollisionMapGenerator: invalid map width ({len(data_line)} instead of {self.width})')
+            raise Exception(f'CollisionMapGenerator add_line_data: invalid map width ({len(data_line)} instead of {self.width})')
 
         for line_i in range(0, len(data_line) // 2):
             left = data_line[line_i * 2]
@@ -69,6 +69,7 @@ class CollisionMapGenerator(Generator):
 
 
     def finalize(self):
+        # TODO: make this path modifiable
         with open(os.path.join('res', self.path), 'wb') as of:
             for val in self.array:
                 of.write(struct.pack('B', val))
