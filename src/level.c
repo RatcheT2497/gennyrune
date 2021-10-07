@@ -110,7 +110,7 @@ static inline void _LVL_ExecuteTrigger(u16 x, u16 y)
                 while(gfx_palette_dirty); // wait for enough vblanks
                 SYS_disableInts();
                     gfx_palette_dirty = GFX_PALETTE_FADEOUT | TRUE;
-                    gfx_palette_fade_time = 16;
+                    //gfx_palette_fade_time = 16;
                 SYS_enableInts();
                 while(gfx_palette_dirty); // wait for enough vblanks
                 // initialize level and new player coordinates
@@ -351,8 +351,9 @@ void LVL_Init(const LevelDefinition_t *definition)
     /// TODO: leave palette update to scripting engine
     //PAL_setColors(0, gfx_palette, 4*16, DMA_QUEUE);
     gfx_palette_dirty = GFX_PALETTE_FADEIN | TRUE;
-    gfx_palette_fade_time = 16;
+    //gfx_palette_fade_time = 16;
     SYS_enableInts();
+    
     /// TODO: figure out if this does anything because it sure as heck doesn't scroll
     MAP_scrollTo(lvl_current.map, 0, 0);
     while(gfx_palette_dirty); // wait for enough vblanks to load palette
