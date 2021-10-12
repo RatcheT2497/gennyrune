@@ -2,16 +2,15 @@
 /// FILE:           src/graphics_allocator.c
 /// AUTHOR:         RatcheT2497
 /// CREATION:       ???
-/// MODIFIED:       25/09/21
+/// MODIFIED:       12/10/21
 /// DESCRIPTION:    File containing definitions for the graphics allocator's API.
 /// CHANGELOG:      (23/09/21) Added this file header. -R#
 ///                 (25/09/21) Added variable definitions for manual palette handling. -R#
+///                 (12/10/21) Removed variable definitions for manual palette handling. -R#
 #include "graphics_allocator.h"
 u16 gfx_palette[64] = {0};
 u16 gfx_allocated_tile_index = TILE_USERINDEX;
 u16 gfx_last_allocated_tile_index = TILE_USERINDEX;
-volatile u8 gfx_palette_dirty = FALSE;
-volatile u8 gfx_palette_fade_time = 0;
 u16 GFX_LoadTileset(const TileSet *tileset, TransferMethod transferMethod)
 {
     u16 ret = VDP_loadTileSet(tileset, gfx_allocated_tile_index, transferMethod);

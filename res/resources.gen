@@ -2,7 +2,7 @@
 # FILE:           res/resources.res
 # AUTHOR:         RatcheT2497
 # CREATION:       ???
-# MODIFIED:       06/10/21
+# MODIFIED:       09/10/21
 # DESCRIPTION:    Resource file for the project, to be preprocessed with the ../tools/resgen.py script and then compiled with SGDK's rescomp.
 #                 Not sure how to handle asset distribution, so the GitHub won't have anything other than this file just yet.
 # CHANGELOG:      (23/09/21) Added this file header. -R#
@@ -11,11 +11,21 @@
 #                 (25/09/21) Added inline collision data to torihouse_krisroom, torihouse_hallway & torihouse_lobby.
 #                            Removed editor resources and added textbox images. -R#
 #                 (06/10/21) Replaced manual level asset definitions with preprocessor level definitions -R#
+#                 (09/10/21) Added actor definition command -R#
+
 SPRITE spr_placeholder ".\sprites\placeholder.png" 4 6 NONE 0 NONE BALANCED 500000
 PALETTE pal_placeholder_spr ".\sprites\placeholder.png"
 
 SPRITE spr_kris ".\characters\kris.png" 4 5 NONE 0 NONE BALANCED 500000
 PALETTE pal_main_party ".\characters\main_party_palette.png"
+
+#!ACTORS
+#@ spr_kris 10 26 14 14
+#@ spr_kris 10 26 14 14
+#@ spr_kris 10 26 14 14
+#@ spr_kris 10 26 14 14
+#@ spr_placeholder 0 0 16 32
+#!END
 
 # level resources
 

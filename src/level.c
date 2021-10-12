@@ -2,7 +2,7 @@
 /// FILE:           src/level.c
 /// AUTHOR:         RatcheT2497
 /// CREATION:       ???
-/// MODIFIED:       25/09/21
+/// MODIFIED:       12/10/21
 /// DESCRIPTION:    File containing definitions for the level module and its API. 
 ///                 Also includes some internal things such as player movement, but I hope to refactor that out later.
 /// CHANGELOG:      (23/09/21) Added this file header. -R#
@@ -11,8 +11,11 @@
 ///                 (25/09/21) Added room transition trigger code to the player movement.
 ///                            Partially untied player position and direction from the level data. (NOTE: should maybe think of untying it completely/making a separate struct for it...)
 ///                            Began working on custom palette management for room transitions. -R#
+///                 (11/10/21) Moved palette handling stuff to the GAME module. -R#
+///                 (12/10/21) Defined helper functions for GAME module interoperability. -R#
 #include <genesis.h>
 #include <resources.h>
+#include "game.h"
 #include "level.h"
 #include "graphics_allocator.h"
 #include "scriptmachine.h"
@@ -28,16 +31,11 @@ u8 lvl_current_trigger = 0xFF;
 fix16 lvl_player_x = 0, lvl_player_y = 0;
 u8 lvl_player_direction = 0;
 
-static inline void _LVL_FocusCamera(void)
-{
-    lvl_current.cam_x = lvl_player_x - FIX16(PIXEL_SCREEN_WIDTH/2);
-    lvl_current.cam_y = lvl_player_y - FIX16(PIXEL_SCREEN_HEIGHT/2);
-}
 static inline bool _LVL_CharIsOnTile(ActorRuntimeData_t *character, u8 tile, u16 *ox, u16 *oy)
 {
     s16 x1, y1, x2, y2, x, y;
-    Vect2D_s16 offset = lvl_character_offsets_lw[character->type];
-    Vect2D_s16 size = lvl_character_bounds_lw[character->type];
+    Vect2D_s16 offset = lvl_actor_offsets[character->type];
+    Vect2D_s16 size = lvl_actor_bounds[character->type];
     x1 = (fix16ToInt(character->x) + offset.x) / 16;
     y1 = (fix16ToInt(character->y) + offset.y) / 16;
     x2 = (fix16ToInt(character->x) + offset.x + size.x) / 16;
@@ -65,8 +63,8 @@ static inline bool _LVL_CharIsOnTile(ActorRuntimeData_t *character, u8 tile, u16
 static inline bool _LVL_CharCanPass(ActorRuntimeData_t *character, fix16 dx, fix16 dy)
 {
     s16 x1, y1, x2, y2, x, y;
-    Vect2D_s16 offset = lvl_character_offsets_lw[character->type];
-    Vect2D_s16 size = lvl_character_bounds_lw[character->type];
+    Vect2D_s16 offset = lvl_actor_offsets[character->type];
+    Vect2D_s16 size = lvl_actor_bounds[character->type];
     x1 = (fix16ToInt(character->x + dx) + offset.x) / 16;
     y1 = (fix16ToInt(character->y + dy) + offset.y) / 16;
     x2 = (fix16ToInt(character->x + dx) + offset.x + size.x) / 16;
@@ -101,29 +99,29 @@ static inline void _LVL_ExecuteTrigger(u16 x, u16 y)
             if ((s16)(trigger->flags) < 0)
             {
                 // teleport trigger
-                u16 room = trigger->button;
-                u8 node_id = (u8)trigger->script;
+                u16 levelid = trigger->condition;
+                u8 node_id = (u8)trigger->target;
                 Vect2D_f16 *node;
-                LevelDefinition_t *newlevel = levels[room];
+                LevelDefinition_t *newlevel = levels[levelid];
 
                 // fade out 
-                while(gfx_palette_dirty); // wait for enough vblanks
-                SYS_disableInts();
-                    gfx_palette_dirty = GFX_PALETTE_FADEOUT | TRUE;
+                //while(gfx_palette_dirty); // wait for enough vblanks
+                //SYS_disableInts();
+                //    gfx_palette_dirty = GFX_PALETTE_FADEOUT | TRUE;
                     //gfx_palette_fade_time = 16;
-                SYS_enableInts();
-                while(gfx_palette_dirty); // wait for enough vblanks
+                //SYS_enableInts();
+                //while(gfx_palette_dirty); // wait for enough vblanks
                 // initialize level and new player coordinates
                 node = newlevel->actor_nodes + node_id;
                 lvl_player_x = node->x;
                 lvl_player_y = node->y;
-                LVL_Init(newlevel);
-                _LVL_FocusCamera();
+                GAME_SwitchLevel(levelid);
+                //LVL_Init(newlevel);
             } else {
                 // script trigger
                 /// TODO: button filter
                 /// TODO: testing
-                scr_pc = trigger->script;
+                scr_pc = trigger->target;
                 scr_flags |= SCRF_RUNNING;
             }
             lvl_current_trigger = i;
@@ -251,7 +249,6 @@ static inline void _LVL_UpdatePlayer(void)
         }
     }
 }
-
 static inline void _LVL_UpdateActor(ActorRuntimeData_t *entity)
 {
     if (entity->sprite) 
@@ -270,10 +267,27 @@ static inline void _LVL_UpdateCharacters(void)
     /// TODO: WIP
 }
 
+inline void LVL_FocusCamera(void)
+{
+    lvl_current.cam_x = lvl_player_x - FIX16(PIXEL_SCREEN_WIDTH/2);
+    lvl_current.cam_y = lvl_player_y - FIX16(PIXEL_SCREEN_HEIGHT/2);
+}
+inline void LVL_Scroll(void)
+{
+    // camera bounds
+    lvl_current.cam_x = clamp(lvl_current.cam_x, 0, FIX16(lvl_current_definition->width - PIXEL_SCREEN_WIDTH));
+    lvl_current.cam_y = clamp(lvl_current.cam_y, 0, FIX16(lvl_current_definition->height - PIXEL_SCREEN_HEIGHT));
+    
+    // scroll map
+    if (lvl_current.map)
+    {
+        MAP_scrollTo(lvl_current.map, fix16ToInt(lvl_current.cam_x), fix16ToInt(lvl_current.cam_y));
+    }
+}
 void LVL_Init(const LevelDefinition_t *definition)
 {
     u8 i;
-    SYS_disableInts();
+    //SYS_disableInts();
     // store definition pointer
     lvl_current_definition = definition;
 
@@ -283,8 +297,9 @@ void LVL_Init(const LevelDefinition_t *definition)
     memset(&lvl_current, 0, sizeof(LevelRuntime_t));
 
     // reset camera & scroll
-    lvl_current.cam_x = 0;
-    lvl_current.cam_y = 0;
+    LVL_FocusCamera();
+    //lvl_current.cam_x = 0;
+    //lvl_current.cam_y = 0;
     VDP_setHorizontalScroll(BG_B, 0);
     VDP_setVerticalScroll(BG_B, 0);
 
@@ -309,7 +324,7 @@ void LVL_Init(const LevelDefinition_t *definition)
     }
     // initialize entities 
     if (lvl_current.actors) MEM_free(lvl_current.actors);
-    u16 actor_size = sizeof(ActorRuntimeData_t) * (definition->entity_count + 4);
+    u16 actor_size = sizeof(ActorRuntimeData_t) * (definition->entity_count + CHARACTER_COUNT);
     lvl_current.actors = MEM_alloc(actor_size);
     memset(lvl_current.actors, 0, actor_size);
 
@@ -319,14 +334,14 @@ void LVL_Init(const LevelDefinition_t *definition)
         EntityDefinition_t *def = definition->entities + i;
         if (def->type == ENT_ACTOR)
         {
-            ActorRuntimeData_t *actor = lvl_current.actors + def->index + 4;
+            ActorRuntimeData_t *actor = lvl_current.actors + def->index + CHARACTER_COUNT;
             actor->x = def->x;
             actor->y = def->y;
             actor->flags = 0x80 | def->flags;
             actor->type = def->type;
-            if (lvl_entity_sprite_definitions[actor->type])
+            if (lvl_actor_sprite_definitions[actor->type])
             {
-                actor->sprite = SPR_addSprite(lvl_entity_sprite_definitions[actor->type], fix16ToInt(def->x), fix16ToInt(def->y), TILE_ATTR(PAL_ACTORS, FALSE, FALSE, FALSE));
+                actor->sprite = SPR_addSprite(lvl_actor_sprite_definitions[actor->type], fix16ToInt(def->x - lvl_current.cam_x), fix16ToInt(def->y - lvl_current.cam_y), TILE_ATTR(PAL_ACTORS, FALSE, FALSE, FALSE));
                 SPR_setVisibility(actor->sprite, IS_FLAG_SET(actor->flags, ENF_HIDDEN) ? HIDDEN : AUTO_FAST);
             }
         }
@@ -334,19 +349,21 @@ void LVL_Init(const LevelDefinition_t *definition)
     // load characters & set leading character
     memcpy(gfx_palette + 32, pal_main_party.data, pal_main_party.length);
     lvl_current.lead_character_actor = lvl_current.actors;
-    for (i = 0; i < 4; i++)
+    for (i = 0; i < CHARACTER_COUNT; i++)
     {
+        // if the party member exists and is allowed in the level 
         if ( ((lvl_current_party & (1 << i)) == (definition->flags & (1 << i))) && 
              ((lvl_current_party & (1 << i)) != 0) )
         {
             ActorRuntimeData_t *actor = lvl_current.actors + i;
             lvl_current.characters[i].actor_id = i;
-            actor->flags = 0x80;
+
+            actor->flags = 0x80; // alive
             actor->type = i;
             actor->x = lvl_player_x;
             actor->y = lvl_player_y;
             actor->direction = lvl_player_direction;
-            actor->sprite = SPR_addSprite(lvl_character_sprites_lw[i], fix16ToInt(actor->x), fix16ToInt(actor->y), TILE_ATTR(PAL_CHARACTERS, FALSE, FALSE, FALSE));
+            actor->sprite = SPR_addSprite(lvl_actor_sprite_definitions[i], fix16ToInt(actor->x), fix16ToInt(actor->y), TILE_ATTR(PAL_CHARACTERS, FALSE, FALSE, FALSE));
             SPR_setVisibility(actor->sprite, AUTO_FAST);
         }
     }
@@ -357,13 +374,13 @@ void LVL_Init(const LevelDefinition_t *definition)
 
     /// TODO: leave palette update to scripting engine
     //PAL_setColors(0, gfx_palette, 4*16, DMA_QUEUE);
-    gfx_palette_dirty = GFX_PALETTE_FADEIN | TRUE;
+    //gfx_palette_dirty = GFX_PALETTE_FADEIN | TRUE;
     //gfx_palette_fade_time = 16;
-    SYS_enableInts();
+    //SYS_enableInts();
     
     /// TODO: figure out if this does anything because it sure as heck doesn't scroll
     MAP_scrollTo(lvl_current.map, 0, 0);
-    while(gfx_palette_dirty); // wait for enough vblanks to load palette
+    //while(gfx_palette_dirty); // wait for enough vblanks to load palette
 }
 void LVL_Update(void)
 {
@@ -378,30 +395,24 @@ void LVL_Update(void)
     _LVL_UpdateCharacters();
 
     // update actors
-    KLog_U1("bruh ", lvl_current_definition->entity_count + 4);
     for (i = 0; i < lvl_current_definition->entity_count + 4; i++)
     {
         ActorRuntimeData_t *actor = lvl_current.actors + i;
-        KLog_U1("update actor ", actor->flags);
         if (((s8)actor->flags) < 0)
         {
-            /*if (actor->mvt_timer != 0)
+            /// TODO: actor movement code
+            u8 node_type = actor->mvt_node & 3;
+            u8 node_value = actor->mvt_node >> 2;
+            if (node_type == 0)
             {
-                actor->x += actor->mvt_dx;
-                actor->y += actor->mvt_dy;
-                actor->mvt_timer--;
-            }*/
+                // actor node
+            } 
+            else if (node_type == 1)
+            {
+                // movement sequence
+            }
             _LVL_UpdateActor(actor);
         }
     }
-
-    // camera bounds
-    lvl_current.cam_x = clamp(lvl_current.cam_x, 0, FIX16(lvl_current_definition->width - PIXEL_SCREEN_WIDTH));
-    lvl_current.cam_y = clamp(lvl_current.cam_y, 0, FIX16(lvl_current_definition->height - PIXEL_SCREEN_HEIGHT));
-    
-    // scroll map
-    if (lvl_current.map)
-    {
-        MAP_scrollTo(lvl_current.map, fix16ToInt(lvl_current.cam_x), fix16ToInt(lvl_current.cam_y));
-    }
+    LVL_Scroll();
 }

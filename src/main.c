@@ -2,13 +2,16 @@
 /// FILE:           src/main.c
 /// AUTHOR:         RatcheT2497
 /// CREATION:       ???
-/// MODIFIED:       25/09/21
+/// MODIFIED:       12/10/21
 /// DESCRIPTION:    Main project file. Contains the entry point for the program, initialization and main game loop.
 ///                 Also includes some content which I hope to refactor out later.
 /// CHANGELOG:      (23/09/21) Added this file header. -R#
 ///                 (25/09/21) Added basic entrance trigger/node data for torihouse_lobby, alongside defines for each of the levels.
 ///                            Removed ActorAnimationFrame_t as it was an experiment.
 ///                            Tried fixing the cram dots appearing, with marginal success. -R#
+///                 (09/10/21) Updated level triggers to use condition/target instead of button/script -R#
+///                 (11/10/21) Removed homebrewn palette management stuff for now. -R#
+///                 (12/10/21) Completely removed palette management stuff. Issues fixed with latest SGDK. -R#
 #include <genesis.h>
 #include "utils.h"
 #include <genesis.h>
@@ -20,6 +23,7 @@
 #include "pad.h"
 //#include "keyboard.h"
 #include "editor.h"
+#include "game.h"
 #define LEVEL_TESTROOM (0)
 #define LEVEL_TORIHOUSE_KRISROOM (1)
 #define LEVEL_TORIHOUSE_HALLWAY (2)
@@ -67,8 +71,8 @@ const LevelTrigger_t triggers_torihouse_krisroom[] = {
         .width = 2,
         .height = 2,
         
-        .button = LEVEL_TORIHOUSE_HALLWAY, // room
-        .script = 0  // node
+        .condition = LEVEL_TORIHOUSE_HALLWAY, // room
+        .target = 0  // node
     }
 };
 const Vect2D_f16 nodes_torihouse_krisroom[] = {
@@ -112,8 +116,8 @@ const LevelTrigger_t triggers_torihouse_hallway[] = {
         .width = 3,
         .height = 2,
         
-        .button = LEVEL_TORIHOUSE_KRISROOM, // room
-        .script = 0  // node
+        .condition = LEVEL_TORIHOUSE_KRISROOM, // room
+        .target = 0  // node
     },
     {
         .flags = 0x8000,
@@ -122,8 +126,8 @@ const LevelTrigger_t triggers_torihouse_hallway[] = {
         .width = 2,
         .height = 2,
         
-        .button = LEVEL_TORIHOUSE_LOBBY,
-        .script = 0
+        .condition = LEVEL_TORIHOUSE_LOBBY,
+        .target = 0
     }
 };
 const LevelDefinition_t level_torihouse_hallway = {
@@ -161,8 +165,8 @@ const LevelTrigger_t triggers_torihouse_lobby[] = {
         .width = 2,
         .height = 2,
         
-        .button = LEVEL_TORIHOUSE_HALLWAY, // room
-        .script = 1  // node
+        .condition = LEVEL_TORIHOUSE_HALLWAY, // room
+        .target = 1  // node
     },
 };
 const LevelDefinition_t level_torihouse_lobby = {
@@ -218,38 +222,7 @@ void callback(char c, u16 modifier_keys)
     sprintf(buffer, "char: %c", c);
     KLog(buffer);
 }
-void LVL_VIntCallback(void)
-{
-    if (gfx_palette_dirty)
-    {
-        if (!gfx_palette_fade_time)
-        {
-            PAL_setColors(0, gfx_palette, 16*4, DMA);
-            gfx_palette_dirty = FALSE;
-        } else {
-            if (gfx_palette_dirty & 0b10000000)
-            {
-                KLog("fade step");
-                PAL_doFadeStep();
-                if (!PAL_isDoingFade())
-                    gfx_palette_dirty &= 0b01111111;
-            } else {
-                if (gfx_palette_dirty & GFX_PALETTE_FADEIN)
-                {
-                    KLog("timed fade in");
-                    PAL_initFade(0, 16*4 - 1, palette_black, gfx_palette, gfx_palette_fade_time);
-//                    PAL_fadeInAll(gfx_palette, gfx_palette_fade_time, TRUE);
-                    gfx_palette_dirty = 0b10000000;
-                } else {
-                    KLog("timed fade out");
-                    PAL_initFade(0, 16*4 - 1, gfx_palette, palette_black, gfx_palette_fade_time);
-//                    PAL_fadeOutAll(gfx_palette_fade_time, TRUE);
-                    gfx_palette_dirty = 0b10000000;
-                }
-            }
-        }
-    }
-}
+
 int main(void)
 {
     /// INFO: compiler requires -fms-extensions for the nested structures used in level.h
@@ -257,7 +230,6 @@ int main(void)
         VDP_setPlaneSize(64, 64, TRUE);
         VDP_setScreenWidth320();
         VDP_setScreenHeight224();
-        SYS_setVIntCallback(&LVL_VIntCallback);
         SPR_init();
         JOY_setEventHandler(&PAD_JoyCallback);
 //          SYS_setVIntCallback(&KBD_VIntCallback);
@@ -268,7 +240,8 @@ int main(void)
     memsetU16(gfx_palette, 0xffff, 16*4);
 
     //EDT_PreInit();
-    LVL_Init(levels[1]);
+    GAME_Init();
+    GAME_SwitchLevel(1);
     //VDP_waitVBlank(TRUE);
     //PAL_fadeInAll(gfx_palette, 16, FALSE);
     //EDT_Init();

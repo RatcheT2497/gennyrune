@@ -2,13 +2,15 @@
 /// FILE:           src/level.h
 /// AUTHOR:         RatcheT2497
 /// CREATION:       ???
-/// MODIFIED:       24/09/21
+/// MODIFIED:       12/10/21
 /// DESCRIPTION:    File containing declarations for the level module, including definition, runtime structs and functions. The builk of the game lies here, I'd say.
 /// CHANGELOG:      (23/09/21) Added this file header. -R#
 ///                 (24/09/21) Added declaration for character collision offset/size. -R#
 ///                            Inlined the visual/logical structs into the actual level definition -R#
 ///                            Added level tile legend -R#
 ///                 (25/09/21) Replaced custom LevelActorNode_t struct with simple Vect2D_f16. -R#
+///                 (09/10/21) Consolidated actor/character LUTS; renamed to just actor_... -R#
+///                 (12/10/21) Added some helper functions for interoperability with GAME module. -R#
 
 #ifndef _LEVEL_H_
 #define _LEVEL_H_
@@ -39,6 +41,7 @@ enum {
     CHAR_RALSEI = FLAG(1),
     CHAR_SUSIE = FLAG(2)
 };
+/// TODO: remove this & figure out a better actor/entity type system
 enum {
     ENT_ACTOR = 0,
 };
@@ -55,31 +58,9 @@ typedef struct {
     fix16   y;
 } EntityDefinition_t;
 
+/// TODO: remove this and replace with vector
 typedef struct { u8 width; u8 height; } EntitySize_t;
-/*
-typedef struct BaseEntityRuntime {
-    u16     flags;
-    fix16   x;
-    fix16   y;
-    u8      type;
-    u8      animation;
-    u8      frame;
-    u8      frame_timer;
-    
-    Sprite* sprite;
-} BaseEntityRuntime_t;
-typedef struct {
-    struct BaseEntityRuntime;
-    u8 mvt_timer;
-    fix16 mvt_dx;
-    fix16 mvt_dy;
-} ActorRuntime_t;
-typedef struct {
-    struct BaseEntityRuntime;
-    u8 direction;
-} CharacterRuntime_t;
-*/
-/// TODO: implement these structs. should be much cleaner
+
 typedef struct {
     u8 type;
     u8 flags;
@@ -88,7 +69,7 @@ typedef struct {
     u8 direction;
     u8 animation;
     u8 frame;
-    s8 frame_timer; // if positive, counts down. else next frame. if negative, then frozen
+    s8 frame_timer; // if positive, counts down. else next animation frame. if negative, then frozen
 
     // for scripting system
     s8 mvt_node; // vvvvvvtt - type 0: level node; type 1: level mvt. sequence; type 2: ???; type 3: none;
@@ -104,11 +85,8 @@ typedef struct {
 typedef struct {
     u16 flags;
 
-    /// TODO: rename to `target`
-    u16 script;
-    
-    /// TODO: rename to `specifier` or some such
-    u16 button;
+    u16 target;
+    u16 condition;
     
     u16 x;
     u16 y;
@@ -161,15 +139,13 @@ typedef struct {
     Map*                        map;
     fix16                       cam_x; 
     fix16                       cam_y;
-} LevelRuntime_t; // 720
+} LevelRuntime_t; // 280 bytes
 
-/// TODO: do i even need this public
-extern const SpriteDefinition *lvl_entity_sprite_definitions[];
-extern const EntitySize_t lvl_entity_bounds[];
+// defined in file generated from resources.gen
+extern const SpriteDefinition *lvl_actor_sprite_definitions[];
 
-extern const Vect2D_s16 lvl_character_offsets_lw[];
-extern const Vect2D_s16 lvl_character_bounds_lw[];
-extern const SpriteDefinition const* lvl_character_sprites_lw[];
+extern const Vect2D_s16 lvl_actor_offsets[];
+extern const Vect2D_s16 lvl_actor_bounds[];
 
 extern LevelRuntime_t lvl_current;
 extern LevelDefinition_t *lvl_current_definition;
@@ -179,5 +155,9 @@ extern fix16 lvl_player_x, lvl_player_y;
 extern u8 lvl_player_direction;
 
 void LVL_Init(const LevelDefinition_t *definition);
+
+void LVL_FocusCamera(void);
+void LVL_Scroll(void);
+
 void LVL_Update(void);
 #endif

@@ -2,7 +2,7 @@
 # FILE:           tools/resgen.py
 # AUTHOR:         RatcheT2497
 # CREATION:       23/09/21
-# MODIFIED:       06/10/21
+# MODIFIED:       09/10/21
 # DESCRIPTION:    Resource file preprocessor.
 #                 Usage: resgen.py [src] [out]
 #                  #! - begins preprocessor command
@@ -10,7 +10,7 @@
 #                  Everything else gets copied verbatim to the output file
 # CHANGELOG:      (25/09/21) Added this file header and some comments. -R#
 #                 (06/10/21) Rewrote the generator script entirely. -R#
-
+#                 (09/10/21) Added ActorListGenerator -R#
 import sys
 import struct
 import os
@@ -76,6 +76,55 @@ class CollisionMapGenerator(Generator):
 
         return [f'BIN {self.name} \"{self.path}\" 2 2 0 NONE\n']
 
+class ActorListGenerator(Generator):
+    """
+        #!ACTORS
+        #@ <sprite_name> <offset_x> <offset_y> <aabb_width> <aabb_height>
+        #!END
+    """
+    def __init__(self, line, tokens, is_single_line):
+        self.actors = []
+
+    def finalize(self):
+        sprite_definitions = []
+        offset_definitions = []
+        bounds_definitions = []
+
+        for (name, ox, oy, bw, bh) in self.actors:
+            sprite_definitions.append(f'    &{name},\n')
+            offset_definitions.append(f'    {{.x = {ox}, .y = {oy} }},\n')
+            bounds_definitions.append(f'    {{.x = {bw}, .y = {bh} }},\n')
+        
+        lines = [
+            '#include <genesis.h>\n'
+            '#include "level.h"\n'
+            '#include "resources.h"\n'
+        ]
+
+        lines.append('const SpriteDefinition const* lvl_actor_sprite_definitions[] = {\n')
+        lines += sprite_definitions
+        lines.append('};\n')
+
+        lines.append('const Vect2D_s16 lvl_actor_bounds[] = {\n')
+        lines += bounds_definitions
+        lines.append('};\n')
+
+        lines.append('const Vect2D_s16 lvl_actor_offsets[] = {\n')
+        lines += offset_definitions
+        lines.append('};\n')
+
+        with open('src/gen_actors.c', 'w') as of:
+            of.writelines(lines)
+
+        return []
+
+    def add_line_data(self, line, tokens):
+        (_, sprite_name, offset_x, offset_y, bounds_x, bounds_y) = tokens
+        offset_x = int(offset_x, 0)
+        offset_y = int(offset_y, 0)
+        bounds_x = int(bounds_x, 0)
+        bounds_y = int(bounds_y, 0)
+        self.actors.append((sprite_name, offset_x, offset_y, bounds_x, bounds_y))
 class LevelGenerator(Generator):
     """
         #!LEVEL <name> <path>
@@ -97,7 +146,8 @@ class LevelGenerator(Generator):
 
 GENERATOR_LUT = {
     '#!COLMAP': (CollisionMapGenerator, False),
-    '#!LEVEL': (LevelGenerator, True)
+    '#!LEVEL': (LevelGenerator, True),
+    '#!ACTORS': (ActorListGenerator, False)
 }
 class ResFileParser:
     def _read_file_lines(self, path):
@@ -144,6 +194,7 @@ class ResFileParser:
         for line in self.lines:
             if not line:
                 continue
+
             tokens = self._tokenize_line(line)
             if len(line) > 2:
                 if line[0] == '#':
